@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Right Place, Wrong Time — HNN Three-Body Mechanism · Arnav Mehta</title>
+<meta name="description" content="HNNs don't track chaotic trajectories longer — they fail differently. A controlled 4-model study shows the Hamiltonian advantage is geometric, not temporal, and scales with chaos.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='26' fill='none' stroke='%235b5bd6' stroke-width='3'/%3E%3Ccircle cx='32' cy='6' r='6' fill='%2322d3ee'/%3E%3Ccircle cx='55' cy='45' r='6' fill='%23ff4d6d'/%3E%3Ccircle cx='9' cy='45' r='6' fill='%23ffb020'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#04050d; --bg1:#0a0d1f; --bg2:#121631; --bg3:#1a1f42;
+  --line:rgba(140,150,255,.16); --line2:rgba(140,150,255,.30);
+  --indigo:#5b5bd6; --violet:#a78bfa; --cyan:#22d3ee; --cyan2:#8df4ff;
+  --red:#ff4d6d; --amber:#ffb020; --green:#3ddc97;
+  --m-mlp:#ff4d6d; --m-mech:#ffb020; --m-e:#b48bff; --m-hnn:#22d3ee;
+  --text:#eceafb; --dim:#a3a6cc; --faint:#6c6f96;
+  --disp:'Unbounded',sans-serif; --body:'Space Grotesk',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --nav-h:64px; --acc:var(--cyan);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg0);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.6;overflow-x:hidden}
+::selection{background:var(--cyan);color:#04121a}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:var(--bg0)}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--indigo),var(--cyan));border-radius:6px;border:2px solid var(--bg0)}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,var(--violet),var(--cyan2))}
+*{scrollbar-width:thin;scrollbar-color:var(--indigo) var(--bg0)}
+a{color:var(--cyan);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:4px}
+
+/* ---------- background layers ---------- */
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+.aurora{position:fixed;border-radius:50%;filter:blur(90px);z-index:0;pointer-events:none;opacity:.5;will-change:transform}
+.a1{width:60vw;height:60vw;left:-18vw;top:-22vw;background:radial-gradient(circle,rgba(91,91,214,.34),transparent 65%)}
+.a2{width:52vw;height:52vw;right:-16vw;top:22vh;background:radial-gradient(circle,rgba(34,211,238,.14),transparent 65%)}
+.a3{width:56vw;height:56vw;left:8vw;bottom:-30vw;background:radial-gradient(circle,rgba(255,77,109,.11),transparent 65%)}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E")}
+#progress{position:fixed;top:0;left:0;height:2px;width:100%;z-index:60;transform-origin:left;transform:scaleX(0);
+  background:linear-gradient(90deg,var(--indigo),var(--cyan),var(--violet),var(--red))}
+
+/* ---------- nav ---------- */
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:50;display:flex;align-items:center;gap:26px;
+  padding:0 clamp(16px,4vw,44px);background:rgba(6,8,20,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-weight:600;font-size:13px;color:var(--text);letter-spacing:.02em}
+.logo svg{width:30px;height:30px;flex:none}
+.logo .orb{transform-origin:16px 16px;animation:spin 14s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo em{font-style:normal;color:var(--cyan)}
+.nlinks{display:flex;gap:4px;margin-left:auto}
+.nlinks a{font-family:var(--mono);font-size:12px;color:var(--dim);padding:8px 12px;border-radius:8px;position:relative;transition:color .2s}
+.nlinks a:hover{color:var(--text);background:rgba(140,150,255,.08)}
+.nlinks a.act{color:var(--cyan2)}
+.nlinks a.act::after{content:"";position:absolute;left:12px;right:12px;bottom:2px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--violet))}
+.npdf{font-family:var(--mono);font-size:12px;font-weight:600;color:#04121a;background:linear-gradient(120deg,var(--cyan),var(--cyan2));
+  padding:9px 16px;border-radius:9px;border:none;transition:transform .15s,box-shadow .2s;box-shadow:0 0 18px rgba(34,211,238,.35)}
+.npdf:hover{transform:translateY(-1px);box-shadow:0 0 28px rgba(34,211,238,.55)}
+#navToggle{display:none;background:none;border:1px solid var(--line2);border-radius:8px;color:var(--text);width:38px;height:38px;font-size:17px}
+#mobileMenu{display:none;position:fixed;top:var(--nav-h);left:0;right:0;z-index:49;background:rgba(6,8,20,.96);border-bottom:1px solid var(--line);padding:12px 20px;flex-direction:column;gap:2px}
+#mobileMenu.open{display:flex}
+#mobileMenu a{font-family:var(--mono);font-size:13px;color:var(--dim);padding:11px 8px;border-bottom:1px solid rgba(140,150,255,.07)}
+#mobileMenu a:hover{color:var(--cyan2)}
+
+/* ---------- dot rail ---------- */
+#dots{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;gap:14px}
+#dots a{width:9px;height:9px;border-radius:50%;background:var(--faint);position:relative;transition:all .25s;display:block}
+#dots a.act{background:var(--cyan);box-shadow:0 0 12px var(--cyan);transform:scale(1.35)}
+#dots a::before{content:attr(data-l);position:absolute;right:20px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;
+  color:var(--cyan2);background:var(--bg2);border:1px solid var(--line2);padding:3px 9px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
+#dots a:hover::before{opacity:1}
+
+/* ---------- layout ---------- */
+main{position:relative;z-index:2}
+section{scroll-margin-top:calc(var(--nav-h) + 16px);padding:clamp(56px,8vw,110px) clamp(16px,5vw,72px);max-width:1440px;margin:0 auto;position:relative}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;color:var(--acc);text-transform:uppercase;display:flex;align-items:center;gap:12px}
+.kicker::before{content:"";width:34px;height:1px;background:linear-gradient(90deg,var(--acc),transparent)}
+h2{font-family:var(--disp);font-weight:700;font-size:clamp(26px,3.6vw,44px);line-height:1.12;margin:14px 0 10px;letter-spacing:-.01em}
+.snum{font-family:var(--disp);font-weight:900;font-size:clamp(60px,8vw,110px);line-height:1;color:transparent;
+  -webkit-text-stroke:1px rgba(140,150,255,.22);position:absolute;top:clamp(40px,6vw,80px);right:clamp(16px,5vw,72px);pointer-events:none;user-select:none}
+.lede{color:var(--dim);max-width:760px;font-size:clamp(15px,1.4vw,17.5px)}
+.lede strong{color:var(--text)}
+.card{background:linear-gradient(160deg,rgba(26,31,66,.55),rgba(10,13,31,.85));border:1px solid var(--line);border-radius:18px;padding:22px;position:relative}
+.card::before{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;
+  background:radial-gradient(600px 200px at 20% 0%,color-mix(in srgb,var(--acc) 9%,transparent),transparent)}
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--dim);
+  border:1px solid var(--line);border-radius:99px;padding:5px 12px;background:rgba(10,13,31,.6)}
+.chip b{color:var(--text);font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
+.rv.in{opacity:1;transform:none}
+
+/* ---------- hero / lab ---------- */
+#lab{padding-top:calc(var(--nav-h) + clamp(30px,5vw,64px));--acc:var(--cyan)}
+.hero-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:22px;margin-bottom:26px}
+h1{font-family:var(--disp);font-weight:900;font-size:clamp(34px,6.2vw,84px);line-height:1.02;letter-spacing:-.015em}
+h1 .l1{display:block;color:var(--text)}
+h1 .l2{display:block;background:linear-gradient(95deg,var(--cyan) 5%,var(--violet) 48%,var(--red) 95%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-sub{max-width:520px}
+.hero-sub .ptitle{font-family:var(--mono);font-size:12px;color:var(--cyan2);margin-bottom:10px;line-height:1.7}
+.hero-sub p{color:var(--dim);font-size:15.5px}
+.hero-sub p strong{color:var(--text)}
+.hero-ctas{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{font-family:var(--mono);font-size:12.5px;font-weight:600;padding:11px 18px;border-radius:10px;border:1px solid var(--line2);
+  background:rgba(26,31,66,.6);color:var(--text);transition:all .18s;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--cyan);color:var(--cyan2);transform:translateY(-1px);box-shadow:0 4px 20px rgba(34,211,238,.18)}
+.btn.solid{background:linear-gradient(120deg,var(--cyan),#4cc9f0);color:#04121a;border:none;box-shadow:0 0 22px rgba(34,211,238,.3)}
+.btn.solid:hover{box-shadow:0 0 34px rgba(34,211,238,.55);color:#04121a}
+.meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+
+.lab-grid{display:grid;grid-template-columns:minmax(0,1fr) 332px;gap:18px;align-items:start}
+.stage-wrap{min-width:0}
+.stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line2);background:#05060f;
+  aspect-ratio:16/10.2;min-height:380px;box-shadow:0 0 0 1px rgba(34,211,238,.06),0 30px 80px rgba(0,0,0,.5),inset 0 0 120px rgba(91,91,214,.07)}
+#sim{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+.hud .chip{background:rgba(5,6,15,.78);backdrop-filter:blur(6px)}
+#hudModel{font-weight:600}
+.stage-hint{position:absolute;bottom:10px;left:12px;right:12px;font-family:var(--mono);font-size:10.5px;color:var(--faint);pointer-events:none;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+.metric{background:linear-gradient(160deg,rgba(26,31,66,.5),rgba(10,13,31,.85));border:1px solid var(--line);border-radius:14px;padding:13px 15px}
+.metric .ml{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase}
+.metric .mv{font-family:var(--mono);font-size:clamp(19px,2vw,26px);font-weight:600;margin:4px 0 7px;transition:color .3s}
+.metric .mbar{height:5px;border-radius:3px;background:rgba(140,150,255,.12);overflow:hidden}
+.metric .mbar i{display:block;height:100%;width:0%;border-radius:3px;background:var(--cyan);transition:width .25s,background .3s}
+.metric .mn{font-family:var(--mono);font-size:9.5px;color:var(--faint);margin-top:6px}
+.demo-note{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:10px;line-height:1.7}
+.demo-note b{color:var(--dim)}
+
+/* control rail */
+.controls{background:linear-gradient(170deg,rgba(26,31,66,.6),rgba(8,10,24,.92));border:1px solid var(--line2);border-radius:18px;padding:16px;position:sticky;top:calc(var(--nav-h) + 14px)}
+.ctl-title{font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--faint);text-transform:uppercase;margin:15px 0 9px;display:flex;align-items:center;gap:8px}
+.ctl-title:first-child{margin-top:0}
+.ctl-title::after{content:"";flex:1;height:1px;background:var(--line)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.mbtn{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:10px 6px;border-radius:10px;border:1px solid var(--line);
+  background:rgba(10,13,31,.7);color:var(--dim);transition:all .18s;position:relative}
+.mbtn small{display:block;font-size:8.5px;font-weight:400;color:var(--faint);margin-top:2px;letter-spacing:.04em}
+.mbtn:hover{transform:translateY(-1px);color:var(--text)}
+.mbtn[aria-pressed="true"]{color:#0a0c18;border-color:transparent}
+.mbtn[data-m="mlp"][aria-pressed="true"]{background:var(--m-mlp);box-shadow:0 0 18px rgba(255,77,109,.45)}
+.mbtn[data-m="mech"][aria-pressed="true"]{background:var(--m-mech);box-shadow:0 0 18px rgba(255,176,32,.45)}
+.mbtn[data-m="e"][aria-pressed="true"]{background:var(--m-e);box-shadow:0 0 18px rgba(180,139,255,.45)}
+.mbtn[data-m="hnn"][aria-pressed="true"]{background:var(--m-hnn);box-shadow:0 0 18px rgba(34,211,238,.45)}
+.mbtn[aria-pressed="true"] small{color:rgba(10,12,24,.7)}
+.mbtn.pulse::after{content:"";position:absolute;inset:-3px;border-radius:12px;border:2px solid var(--cyan);animation:pulse 1.6s ease-out infinite;pointer-events:none}
+@keyframes pulse{0%{opacity:.9;transform:scale(.96)}100%{opacity:0;transform:scale(1.12)}}
+select{width:100%;font-family:var(--mono);font-size:12px;color:var(--text);background:var(--bg1);border:1px solid var(--line2);border-radius:9px;padding:9px 10px;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2322d3ee' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+select:hover{border-color:var(--cyan)}
+.selrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.slider{margin-bottom:9px}
+.slider .sl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:4px}
+.slider .sl output{color:var(--cyan2);font-weight:600}
+input[type=range]{width:100%;height:22px;appearance:none;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--indigo),var(--cyan))}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:var(--cyan2);margin-top:-5.5px;border:2px solid #0a2a33;box-shadow:0 0 10px rgba(34,211,238,.6);transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--indigo),var(--cyan))}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--cyan2);border:2px solid #0a2a33}
+.toggles{display:flex;flex-direction:column;gap:7px}
+.tgl{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--dim);cursor:pointer;padding:2px 0}
+.tgl input{position:absolute;opacity:0;pointer-events:none}
+.tgl .sw{width:34px;height:19px;border-radius:10px;background:rgba(140,150,255,.18);position:relative;transition:background .2s;flex:none}
+.tgl .sw::after{content:"";position:absolute;top:2.5px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--faint);transition:all .2s}
+.tgl input:checked + .sw{background:linear-gradient(90deg,var(--indigo),var(--cyan))}
+.tgl input:checked + .sw::after{left:17px;background:#eafcff;box-shadow:0 0 8px rgba(34,211,238,.8)}
+.tgl input:focus-visible + .sw{outline:2px solid var(--cyan);outline-offset:2px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.abtn{font-family:var(--mono);font-size:11px;font-weight:600;padding:10px 6px;border-radius:9px;border:1px solid var(--line2);background:rgba(26,31,66,.55);color:var(--text);transition:all .16s}
+.abtn:hover{border-color:var(--cyan);color:var(--cyan2);transform:translateY(-1px)}
+.abtn.warn:hover{border-color:var(--amber);color:var(--amber)}
+.abtn.go{background:linear-gradient(120deg,rgba(34,211,238,.18),rgba(91,91,214,.18));border-color:rgba(34,211,238,.4)}
+
+/* ---------- results ---------- */
+#null{--acc:var(--red)} #geometry{--acc:var(--cyan)} #mechanism{--acc:var(--violet)} #ladder{--acc:var(--amber)} #paper{--acc:var(--green)}
+.res-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:18px;margin-top:28px;align-items:start}
+.chart-card{padding:20px 18px 12px}
+.chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.chart-head h3{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text)}
+.legend{display:flex;gap:12px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.dl-svg{font-family:var(--mono);font-size:10px;color:var(--faint);background:none;border:1px solid var(--line);border-radius:7px;padding:5px 10px;transition:all .15s}
+.dl-svg:hover{color:var(--cyan2);border-color:var(--cyan)}
+.chart svg{width:100%;height:auto;display:block}
+.chart .bar{transform-box:fill-box;transform-origin:bottom;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.chart .hbar{transform-box:fill-box;transform-origin:left;transition:transform .9s cubic-bezier(.2,.7,.2,1)}
+.rv:not(.in) .chart .bar,.rv:not(.in) .chart .hbar{transform:scale(0)}
+.chart .ci{opacity:0;transition:opacity .5s .7s}
+.in .chart .ci{opacity:1}
+.insight{border-left:3px solid var(--acc)}
+.insight h4{font-family:var(--disp);font-size:16px;font-weight:700;margin-bottom:10px;color:var(--text)}
+.insight p{color:var(--dim);font-size:14.5px;margin-bottom:10px}
+.insight p strong{color:var(--text)}
+.insight .tag{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:block}
+.verdict{font-family:var(--mono);font-size:12px;padding:12px 14px;border-radius:10px;margin-top:6px;line-height:1.7}
+.verdict.bad{background:rgba(255,77,109,.09);border:1px solid rgba(255,77,109,.3);color:#ffb3c1}
+.verdict.good{background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.3);color:var(--cyan2)}
+.verdict.warn{background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.3);color:#ffd58a}
+.bigstats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:26px 0 4px}
+.bigstat{ text-align:center;padding:24px 12px;border-radius:16px;border:1px solid var(--line);background:linear-gradient(170deg,rgba(34,211,238,.07),rgba(10,13,31,.85))}
+.bigstat .n{font-family:var(--disp);font-weight:900;font-size:clamp(38px,5vw,62px);background:linear-gradient(120deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.bigstat .l{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.14em;text-transform:uppercase;margin-top:4px}
+.bigstat .s{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:3px}
+
+/* mechanism sticky */
+.mech-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,1.6fr);gap:18px;margin-top:28px;align-items:start}
+.mech-left{position:sticky;top:calc(var(--nav-h) + 16px)}
+.corr{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.corr .card{padding:16px}
+.corr .cv{font-family:var(--mono);font-size:24px;font-weight:600;color:var(--cyan2)}
+.corr .cv.v2{color:var(--violet)}
+.corr .cl{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:3px;line-height:1.6}
+.softgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.softcard{padding:18px;border-radius:14px;border:1px solid var(--line)}
+.softcard.soft{background:linear-gradient(160deg,rgba(255,77,109,.07),rgba(10,13,31,.9));border-color:rgba(255,77,109,.28)}
+.softcard.hard{background:linear-gradient(160deg,rgba(34,211,238,.07),rgba(10,13,31,.9));border-color:rgba(34,211,238,.3)}
+.softcard h5{font-family:var(--mono);font-size:12px;letter-spacing:.14em;margin-bottom:9px}
+.softcard.soft h5{color:var(--red)} .softcard.hard h5{color:var(--cyan)}
+.eq{font-family:var(--mono);font-size:12.5px;background:rgba(4,5,13,.7);border:1px solid var(--line);border-radius:9px;padding:11px 12px;margin:8px 0;color:var(--cyan2);overflow-x:auto;white-space:nowrap}
+.softcard.soft .eq{color:#ffb3c1}
+.softcard p{font-size:13px;color:var(--dim)}
+.softcard p b{color:var(--text)}
+
+/* ladder */
+.backbone{font-family:var(--mono);font-size:12px;color:var(--dim);border:1px dashed var(--line2);border-radius:12px;padding:14px 18px;margin-top:24px;background:rgba(10,13,31,.6);line-height:1.8}
+.backbone b{color:var(--amber)}
+.models{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+.model-card{padding:18px;border-radius:16px;border:1px solid var(--line);background:linear-gradient(170deg,rgba(26,31,66,.5),rgba(8,10,24,.92));display:flex;flex-direction:column;gap:9px;transition:transform .2s,border-color .2s;position:relative;overflow:hidden}
+.model-card:hover{transform:translateY(-4px)}
+.model-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc)}
+.model-card:hover{border-color:var(--mc)}
+.model-card .mi{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.model-card h4{font-family:var(--disp);font-size:16px;font-weight:700;color:var(--mc)}
+.model-card .knows{font-size:13px;color:var(--dim);min-height:42px}
+.model-card .eq{font-size:11px;margin:0}
+.model-card .mrow{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--faint);border-top:1px solid var(--line);padding-top:8px}
+.model-card .mrow b{color:var(--text);font-weight:500}
+.load-btn{margin-top:auto;font-family:var(--mono);font-size:11px;font-weight:600;padding:9px;border-radius:9px;border:1px solid var(--line2);background:rgba(10,13,31,.7);color:var(--dim);transition:all .16s}
+.load-btn:hover{color:#0a0c18;background:var(--mc);border-color:transparent}
+
+/* pipeline + ruler */
+.pipe{display:flex;align-items:stretch;gap:0;margin-top:26px;flex-wrap:wrap}
+.pnode{flex:1;min-width:130px;text-align:center;padding:16px 8px;border:1px solid var(--line);background:rgba(10,13,31,.7);position:relative;border-radius:14px;margin-right:26px;margin-bottom:12px}
+.pnode:last-child{margin-right:0}
+.pnode::after{content:"→";position:absolute;right:-22px;top:50%;transform:translateY(-50%);color:var(--amber);font-family:var(--mono);font-size:15px}
+.pnode:last-child::after{display:none}
+.pnode .pn{font-family:var(--disp);font-weight:700;font-size:clamp(20px,2.2vw,28px);color:var(--text)}
+.pnode .pl{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;margin-top:3px}
+.pnode .pd{font-family:var(--mono);font-size:9.5px;color:var(--red);margin-top:5px}
+.pnode .pd.ok{color:var(--green)}
+
+/* paper */
+.paper-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:18px;margin-top:26px;align-items:start}
+.abstract{font-size:14.5px;color:var(--dim);line-height:1.85}
+.abstract strong{color:var(--text)}
+.abstract .drop{font-family:var(--disp);font-weight:900;font-size:40px;float:left;line-height:.9;margin:4px 10px 0 0;color:var(--green)}
+.findings{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.finding{display:flex;gap:12px;align-items:flex-start;padding:13px 15px;border-radius:12px;border:1px solid var(--line);background:rgba(10,13,31,.6)}
+.finding .fn{font-family:var(--disp);font-weight:700;color:var(--green);font-size:15px;flex:none;width:24px}
+.finding p{font-size:13.5px;color:var(--dim)}
+.finding p b{color:var(--text)}
+.limits{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.limits .chip{border-color:rgba(255,176,32,.3);color:#ffd58a}
+pre.code{font-family:var(--mono);font-size:11.5px;line-height:1.75;color:#c9d4ff;background:rgba(4,5,13,.85);border:1px solid var(--line);border-radius:12px;padding:16px;overflow:auto;max-height:420px;white-space:pre;tab-size:2}
+pre.code::-webkit-scrollbar{width:9px;height:9px}
+
+/* citation copy button */
+.copy-btn{font-family:var(--mono);font-size:11px;font-weight:600;padding:8px 15px;border-radius:8px;border:1px solid rgba(61,220,151,.4);background:rgba(61,220,151,.1);color:var(--green);transition:all .15s}
+.copy-btn:hover{background:rgba(61,220,151,.22);transform:translateY(-1px)}
+/* footer */
+footer{position:relative;z-index:2;border-top:1px solid var(--line);padding:34px clamp(16px,5vw,72px);display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:center;background:rgba(6,8,20,.7)}
+footer .fl{font-family:var(--mono);font-size:11.5px;color:var(--faint);line-height:1.9}
+footer .fl b{color:var(--dim)}
+footer .fr{display:flex;gap:14px;font-family:var(--mono);font-size:11.5px}
+
+/* tooltip + toasts */
+#tooltip{position:fixed;z-index:70;pointer-events:none;font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--text);
+  background:rgba(8,10,24,.96);border:1px solid var(--line2);border-radius:9px;padding:9px 12px;white-space:pre-line;opacity:0;transition:opacity .12s;max-width:260px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#toasts{position:fixed;left:18px;bottom:18px;z-index:80;display:flex;flex-direction:column;gap:9px}
+.toast{font-family:var(--mono);font-size:12px;color:var(--text);background:rgba(10,13,31,.95);border:1px solid var(--line2);border-left:3px solid var(--cyan);
+  border-radius:11px;padding:12px 16px;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.5);animation:tin .3s cubic-bezier(.2,.9,.3,1.2)}
+.toast.ok{border-left-color:var(--green)} .toast.warn{border-left-color:var(--amber)}
+@keyframes tin{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+.toast.out{opacity:0;transform:translateY(8px);transition:all .3s}
+
+@media (max-width:1180px){#dots{display:none}}
+@media (max-width:1024px){
+  .lab-grid{grid-template-columns:1fr}
+  .controls{position:static}
+  .res-grid,.mech-grid,.paper-grid{grid-template-columns:1fr}
+  .mech-left{position:static}
+  .models{grid-template-columns:1fr 1fr}
+  .nlinks{display:none}
+  #navToggle{display:block;margin-left:auto}
+  .npdf{margin-left:0}
+}
+@media (max-width:640px){
+  .metrics{grid-template-columns:1fr 1fr}
+  .metrics .metric:last-child{grid-column:1/-1}
+  .bigstats{grid-template-columns:1fr}
+  .models{grid-template-columns:1fr}
+  .softgrid,.corr,.selrow{grid-template-columns:1fr}
+  .stage{aspect-ratio:1/1.05;min-height:340px}
+  .npdf{display:none}
+  .pnode{min-width:calc(50% - 26px)}
+  .hero-head{flex-direction:column;align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  html{scroll-behavior:auto}
+  .rv{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="aurora a1" aria-hidden="true"></div>
+<div class="aurora a2" aria-hidden="true"></div>
+<div class="aurora a3" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div id="progress" aria-hidden="true"></div>
+
+<nav>
+  <a class="logo" href="#lab" aria-label="hnn-threebody-mechanism home">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12.5" fill="none" stroke="#5b5bd6" stroke-width="1.6"/><g class="orb"><circle cx="16" cy="3.5" r="3" fill="#22d3ee"/><circle cx="26.8" cy="22.3" r="3" fill="#ff4d6d"/><circle cx="5.2" cy="22.3" r="3" fill="#ffb020"/></g></svg>
+    hnn<em>·</em>threebody<em>·</em>mechanism
+  </a>
+  <div class="nlinks">
+    <a href="#lab" data-sec="lab">Lab</a>
+    <a href="#null" data-sec="null">Results</a>
+    <a href="#mechanism" data-sec="mechanism">Mechanism</a>
+    <a href="#ladder" data-sec="ladder">Models &amp; Data</a>
+    <a href="#paper" data-sec="paper">Paper</a>
+    
+  </div>
+  <a class="npdf" href="three_body_hnn_paper.pdf" target="_blank" rel="noopener">Read the PDF ↗</a>
+  <button id="navToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+</nav>
+<div id="mobileMenu">
+  <a href="#lab">Mechanism Lab</a><a href="#null">Results — the null &amp; the win</a><a href="#mechanism">Decomposition</a>
+  <a href="#ladder">Models &amp; Data</a><a href="#paper">Paper</a>
+  <a href="three_body_hnn_paper.pdf" target="_blank" rel="noopener" style="color:var(--cyan2)">Read the PDF ↗</a>
+</div>
+
+<div id="dots" aria-hidden="true">
+  <a href="#lab" data-l="Mechanism Lab" data-sec="lab"></a>
+  <a href="#null" data-l="01 · Null Result" data-sec="null"></a>
+  <a href="#geometry" data-l="02 · Geometric Win" data-sec="geometry"></a>
+  <a href="#mechanism" data-l="03 · Decomposition" data-sec="mechanism"></a>
+  <a href="#ladder" data-l="04 · Models &amp; Data" data-sec="ladder"></a>
+  <a href="#paper" data-l="05 · Paper" data-sec="paper"></a>
+  
+</div>
+
+<main>
+<!-- ================= HERO / LAB ================= -->
+<section id="lab">
+  <div class="hero-head">
+    <div>
+      <div class="kicker rv">Machine Learning in Physics · Research Project · May 2026</div>
+      <h1 class="rv" style="--d:.08s"><span class="l1">RIGHT PLACE,</span><span class="l2">WRONG TIME.</span></h1>
+    </div>
+    <div class="hero-sub rv" style="--d:.16s">
+      <div class="ptitle">Decomposing the Hamiltonian Neural Network Advantage in the Chaotic Three-Body Problem — Arnav Mehta</div>
+      <p>HNNs don't track chaotic trajectories any longer than a plain MLP. <strong>They fail differently</strong> — sliding along the correct orbit instead of leaving it — and that geometric advantage <strong>grows with chaos</strong>.</p>
+      <div class="hero-ctas">
+        <a class="btn solid" href="three_body_hnn_paper.pdf" target="_blank" rel="noopener">Read the paper ↗</a>
+        
+        <a class="btn" href="#null">The evidence ↓</a>
+      </div>
+    </div>
+  </div>
+  <div class="meta-row rv" style="--d:.22s">
+    <span class="chip"><span class="dot" style="background:var(--cyan)"></span><b>454</b>&nbsp;held-out systems</span>
+    <span class="chip"><b>4</b>&nbsp;matched models · ~530K params each</span>
+    <span class="chip"><b>5,000</b>&nbsp;trajectories · REBOUND / IAS15</span>
+    <span class="chip">Lyapunov-stratified · <b>λ 0.038 → 11.30</b></span>
+    <span class="chip" style="border-color:rgba(61,220,151,.4);color:var(--green)">● LIVE SIMULATION BELOW</span>
+  </div>
+
+  <div class="lab-grid">
+    <div class="stage-wrap rv" style="--d:.28s">
+      <div class="stage">
+        <canvas id="sim" aria-label="Live three-body simulation comparing model failure modes"></canvas>
+        <div class="hud">
+          <span class="chip" id="hudModel" style="color:var(--m-mlp)">● MLP</span>
+          <span class="chip" id="hudRollout">rollout #1</span>
+          <span class="chip" id="hudTime">t 0.0 / 20</span>
+        </div>
+        <div class="stage-hint">
+          <span>ghost = true orbit · color = model prediction · dashed = error vector</span>
+          <span>same error budget · different structure — switch models mid-flight</span>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="ml">Energy drift</div><div class="mv" id="mEnergyV">0.00%</div><div class="mbar"><i id="mEnergyB"></i></div><div class="mn">|ΔE| / |E₀| · predicted rollout</div></div>
+        <div class="metric"><div class="ml">Orbit error · Hausdorff</div><div class="mv" id="mHausV">0.00</div><div class="mbar"><i id="mHausB"></i></div><div class="mn">bidirectional · phase-independent</div></div>
+        <div class="metric"><div class="ml">Phase offset</div><div class="mv" id="mPhaseV">—</div><div class="mbar"><i id="mPhaseB" style="background:var(--violet)"></i></div><div class="mn">nearest-point lag along true orbit</div></div>
+      </div>
+      <p class="demo-note"><b>About this demo:</b> illustrative error models calibrated to the paper's failure modes — every model gets the <b>identical per-step error budget σ</b>; only the structural projection differs (HNN noise is projected tangent to the energy level set). This is the mechanism made visible, not the trained networks themselves.</p>
+    </div>
+
+    <aside class="controls rv" style="--d:.34s" aria-label="Simulation controls">
+      <div class="ctl-title">Model under test</div>
+      <div class="seg" id="modelSeg" role="group" aria-label="Choose model">
+        <button class="mbtn" data-m="mlp" aria-pressed="true">MLP<small>no physics</small></button>
+        <button class="mbtn" data-m="mech" aria-pressed="false">MechanicsNN<small>q̇ = v exact</small></button>
+        <button class="mbtn" data-m="e" aria-pressed="false">MLP+E<small>soft energy loss</small></button>
+        <button class="mbtn pulse" data-m="hnn" aria-pressed="false">HNN<small>hard constraint</small></button>
+      </div>
+      <div class="ctl-title">System</div>
+      <div class="selrow">
+        <select id="preset" aria-label="Initial condition preset">
+          <option value="figure8">Figure-8 · periodic</option>
+          <option value="butterfly">Butterfly · periodic</option>
+          <option value="chaotic">Chaotic trio · high λ</option>
+          <option value="hier">Hierarchical · mixed</option>
+          <option value="random">Random · sampled</option>
+        </select>
+        <select id="integrator" aria-label="Integrator">
+          <option value="rk4">RK4 · 4th order</option>
+          <option value="euler">Euler · 1st order</option>
+        </select>
+      </div>
+      <div class="ctl-title">Error &amp; time</div>
+      <div class="slider"><div class="sl"><span>Model error σ</span><output id="sigmaVal">0.080</output></div><input type="range" id="sigma" min="0" max="0.3" step="0.005" value="0.08" aria-label="Model error strength"></div>
+      <div class="slider"><div class="sl"><span>Speed</span><output id="speedVal">1.00×</output></div><input type="range" id="speed" min="0.25" max="3" step="0.05" value="1" aria-label="Simulation speed"></div>
+      <div class="slider"><div class="sl"><span>Rollout horizon</span><output id="horizonVal">20 t.u.</output></div><input type="range" id="horizon" min="5" max="40" step="1" value="20" aria-label="Rollout horizon"></div>
+      <div class="ctl-title">Render</div>
+      <div class="slider"><div class="sl"><span>Trail length</span><output id="trailVal">600</output></div><input type="range" id="trail" min="100" max="1600" step="50" value="600" aria-label="Trail length"></div>
+      <div class="slider"><div class="sl"><span>Glow</span><output id="glowVal">55</output></div><input type="range" id="glow" min="0" max="100" step="1" value="55" aria-label="Glow amount"></div>
+      <div class="slider"><div class="sl"><span>Zoom</span><output id="zoomVal">1.00×</output></div><input type="range" id="zoom" min="0.6" max="2.4" step="0.05" value="1" aria-label="Zoom"></div>
+      <div class="toggles">
+        <label class="tgl">True-orbit ghost<input type="checkbox" id="ghost" checked><span class="sw"></span></label>
+        <label class="tgl">Phase / error links<input type="checkbox" id="links" checked><span class="sw"></span></label>
+        <label class="tgl">Grid &amp; guides<input type="checkbox" id="grid"><span class="sw"></span></label>
+      </div>
+      <div class="ctl-title">Actions</div>
+      <div class="actions">
+        <button class="abtn go" id="pauseBtn">⏸ Pause</button>
+        <button class="abtn" id="resetBtn">↺ Reset</button>
+        <button class="abtn warn" id="randBtn">⚄ Randomize</button>
+        <button class="abtn" id="exportBtn">⤓ Export PNG</button>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= 01 NULL ================= -->
+<section id="null">
+  <div class="snum" aria-hidden="true">01</div>
+  <div class="kicker rv">Result 01 · Divergence time</div>
+  <h2 class="rv" style="--d:.06s">The standard metric sees <span style="color:var(--red)">nothing.</span></h2>
+  <p class="lede rv" style="--d:.12s">Ask <em>"is the state in the right place at the right time?"</em> — and all four models fail at statistically identical rates, in every chaos bin, under both integrators. Chaos guarantees it. The confidence intervals overlap completely.</p>
+  <div class="res-grid">
+    <div class="card chart-card rv" style="--d:.16s">
+      <div class="chart-head">
+        <h3>Median divergence time · steps · RK4</h3>
+        <div class="legend" id="legend1"></div>
+        <button class="dl-svg" data-svg="divChart">⤓ SVG</button>
+      </div>
+      <div class="chart" id="divChart"></div>
+      <p class="demo-note">Whiskers = 95% bootstrap CI (2,000 resamples) · threshold sensitivity 0.1–0.9 preserves the null · <b>Euler tells the identical story</b>, ruling out integrator artifacts.</p>
+    </div>
+    <div class="card insight rv" style="--d:.24s">
+      <span class="tag">Why this contradicts the literature</span>
+      <h4>Prior "HNN tracks longer" results were confounded.</h4>
+      <p>Earlier comparisons — including this study's own preliminary runs — gave the HNN a different backbone than the MLP. <strong>Match the architectures exactly and the trajectory-tracking advantage vanishes.</strong></p>
+      <p>What survives the matching is something the temporal metric was never able to see ↓</p>
+      <div class="verdict bad">✗ Divergence time alone would conclude: "HNNs are useless here."</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 02 GEOMETRY ================= -->
+<section id="geometry">
+  <div class="snum" aria-hidden="true">02</div>
+  <div class="kicker rv">Result 02 · Hausdorff distance</div>
+  <h2 class="rv" style="--d:.06s">The orbit <span style="color:var(--cyan)">remembers its shape.</span></h2>
+  <p class="lede rv" style="--d:.12s">Hausdorff distance is <strong>phase-independent</strong>: two trajectories visiting the same points at different times score zero. Ask <em>"did you visit the right places at any time?"</em> — and the HNN wins massively, with the margin growing as chaos intensifies.</p>
+  <div class="bigstats">
+    <div class="bigstat rv" style="--d:.1s"><div class="n"><span class="count" data-to="39" data-suf="%">0%</span></div><div class="l">Lower orbit error</div><div class="s">low chaos · λ &lt; 0.148</div></div>
+    <div class="bigstat rv" style="--d:.2s"><div class="n"><span class="count" data-to="66" data-suf="%">0%</span></div><div class="l">Lower orbit error</div><div class="s">medium chaos</div></div>
+    <div class="bigstat rv" style="--d:.3s"><div class="n"><span class="count" data-to="68" data-suf="%">0%</span></div><div class="l">Lower orbit error</div><div class="s">high chaos · λ ≥ 0.269 · p &lt; 10⁻⁶</div></div>
+  </div>
+  <div class="res-grid">
+    <div class="card chart-card rv" style="--d:.14s">
+      <div class="chart-head">
+        <h3>Median Hausdorff distance · config space · RK4</h3>
+        <div class="legend" id="legend2"></div>
+        <button class="dl-svg" data-svg="hausChart">⤓ SVG</button>
+      </div>
+      <div class="chart" id="hausChart"></div>
+      <p class="demo-note">All HNN-vs-other comparisons: <b>p &lt; 10⁻⁶</b> (Mann–Whitney U) · boxplots confirm the effect is not driven by outliers.</p>
+    </div>
+    <div class="card insight rv" style="--d:.22s">
+      <span class="tag">The mechanism, physically</span>
+      <h4>Two ways to fail a chaotic system.</h4>
+      <p><strong>Phase error:</strong> on the correct orbit, at the wrong time. <strong>Geometric error:</strong> off the orbit entirely — and once off the energy surface, every next prediction is conditioned on an unphysical state. Recovery is impossible.</p>
+      <p>The HNN's dynamics come from autograd of a learned scalar H(q,p), so its trajectories live on <strong>level sets of H</strong>. It can only fail the first way. The MLP fails both.</p>
+      <div class="verdict good">✓ "Right place, wrong time" is the optimal failure mode: phase can be corrected downstream; geometry loss is catastrophic.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 03 MECHANISM ================= -->
+<section id="mechanism">
+  <div class="snum" aria-hidden="true">03</div>
+  <div class="kicker rv">Result 03 · Decomposition &amp; chaos scaling</div>
+  <h2 class="rv" style="--d:.06s">Second-order helps a fixed amount.<br><span style="color:var(--violet)">The Hamiltonian is what scales.</span></h2>
+  <div class="mech-grid">
+    <div class="mech-left">
+      <div class="card insight rv" style="--d:.1s">
+        <span class="tag">Direct contradiction · Gruver et al., ICLR 2022</span>
+        <h4>"Second-order structure suffices" is regime-dependent.</h4>
+        <p>Gruver et al. showed a MechanicsNN — knowing only q̇&nbsp;=&nbsp;v — matches HNNs on pendulums and mass-spring systems. <strong>Correct there. False in chaos.</strong></p>
+        <p>Isolating the Hamiltonian-specific gain (MechanicsNN → HNN) shows it <strong>more than doubles</strong> from low to high chaos, while the second-order part stays roughly constant.</p>
+        <div class="verdict warn">Pendulums: MechanicsNN may suffice.<br>Chaotic N-body: full Hamiltonian enforcement pays off increasingly as λ grows.</div>
+      </div>
+      <div class="corr">
+        <div class="card rv" style="--d:.18s"><div class="cv v2">ρ = <span class="count" data-to="0.246" data-dec="3">0</span></div><div class="cl">HNN vs <b style="color:var(--m-mech)">MechanicsNN</b> advantage ~ λ<br>p = 1.1×10⁻⁷ · CI [0.156, 0.333]<br><b style="color:var(--violet)">the Hamiltonian-specific scaling</b></div></div>
+        <div class="card rv" style="--d:.26s"><div class="cv">ρ = <span class="count" data-to="0.159" data-dec="3">0</span></div><div class="cl">HNN vs <b style="color:var(--m-mlp)">MLP</b> advantage ~ λ<br>p = 6.7×10⁻⁴ · CI [0.064, 0.247]<br>both exclude zero; isolated effect is steeper</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card chart-card rv" style="--d:.14s">
+        <div class="chart-head">
+          <h3>Decomposing the total Hausdorff gain (MLP → HNN)</h3>
+          <div class="legend"><span><span class="dot" style="background:var(--m-mech)"></span>second-order part</span><span><span class="dot" style="background:var(--m-hnn)"></span>Hamiltonian part</span></div>
+          <button class="dl-svg" data-svg="decompChart">⤓ SVG</button>
+        </div>
+        <div class="chart" id="decompChart"></div>
+        <p class="demo-note">Second-order share: <b>59% → 38% → 29%</b>. Hamiltonian share: <b>41% → 62% → 71%</b>. The constraint's contribution grows from 1.34 to 3.33 in absolute Hausdorff units.</p>
+      </div>
+      <div class="softgrid">
+        <div class="softcard soft rv" style="--d:.2s">
+          <h5>SOFT · MLP+E · traded away</h5>
+          <div class="eq">L = MSE + λ·|(E(s′)−E(s))/E(s)|²</div>
+          <p>Loss terms get <b>traded against data-fit</b> during optimization. Result: no benefit beyond MechanicsNN — and paradoxically the <b>worst energy conservation</b> of all four models, despite being trained to conserve it.</p>
+        </div>
+        <div class="softcard hard rv" style="--d:.28s">
+          <h5>HARD · HNN · non-negotiable</h5>
+          <div class="eq">q̇ = ∂Hθ/∂p &nbsp;&nbsp; ṗ = −∂Hθ/∂q</div>
+          <p>Derivatives that violate Hamilton's equations <b>are not in the output space</b>. The constraint cannot be optimized away — structure in the model definition beats structure in the loss.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 04 LADDER & DATA ================= -->
+<section id="ladder">
+  <div class="snum" aria-hidden="true">04</div>
+  <div class="kicker rv">Method · The controlled ladder &amp; the data</div>
+  <h2 class="rv" style="--d:.06s">One backbone. One dataset.<br><span style="color:var(--amber)">Only the physics changes.</span></h2>
+  <div class="backbone rv" style="--d:.12s"><b>Shared backbone:</b> Linear(12→256) → [ResBlock(256)]×4 → head · SiLU · dropout 0.2 · skip connections · <b>~530K params</b> (within 0.5% across models) · Adam 3×10⁻⁴ · identical splits, seed 42, early stopping, rollout protocol. Differences are attributable to <b>structure, not capacity</b>.</div>
+  <div class="models">
+    <div class="model-card rv" style="--mc:var(--m-mlp);--d:.1s">
+      <span class="mi">RUNG 0 · 532,748 params</span><h4>MLP</h4>
+      <p class="knows">Knows nothing. Maps state → full 12D derivative, purely from data.</p>
+      <div class="eq">ẋ = fθ(x)</div>
+      <div class="mrow"><span>val MSE</span><b>0.600</b></div>
+      <div class="mrow"><span>Hausdorff · high λ</span><b>6.91</b></div>
+      <button class="load-btn" data-load="mlp">Load in lab ↑</button>
+    </div>
+    <div class="model-card rv" style="--mc:var(--m-mech);--d:.18s">
+      <span class="mi">RUNG 1 · 531,206 params</span><h4>MechanicsNN</h4>
+      <p class="knows">Knows the system is second-order. Predicts only accelerations; positions evolve at velocity exactly.</p>
+      <div class="eq">q̇ = v · v̇ = aθ(q,v)</div>
+      <div class="mrow"><span>val MSE (accel)</span><b>1.078</b></div>
+      <div class="mrow"><span>Hausdorff · high λ</span><b>5.54</b></div>
+      <button class="load-btn" data-load="mech">Load in lab ↑</button>
+    </div>
+    <div class="model-card rv" style="--mc:var(--m-e);--d:.26s">
+      <span class="mi">RUNG 2 · 532,748 params</span><h4>MLP+E</h4>
+      <p class="knows">Energy-aware via a soft penalty (λ=0.1) in the loss. Architecture identical to MLP.</p>
+      <div class="eq">L = MSE + 0.1·|ΔE/E|²</div>
+      <div class="mrow"><span>val MSE</span><b>0.650</b></div>
+      <div class="mrow"><span>Hausdorff · high λ</span><b>5.64</b></div>
+      <button class="load-btn" data-load="e">Load in lab ↑</button>
+    </div>
+    <div class="model-card rv" style="--mc:var(--m-hnn);--d:.34s">
+      <span class="mi">RUNG 3 · 529,921 params</span><h4>HNN</h4>
+      <p class="knows">Learns a scalar Hamiltonian; dynamics derived by autograd. Conservation is structural.</p>
+      <div class="eq">q̇ = ∂Hθ/∂p · ṗ = −∂Hθ/∂q</div>
+      <div class="mrow"><span>val MSE</span><b>0.603</b></div>
+      <div class="mrow"><span>Hausdorff · high λ</span><b style="color:var(--m-hnn)">2.21</b></div>
+      <button class="load-btn" data-load="hnn">Load in lab ↑</button>
+    </div>
+  </div>
+
+  <div class="card rv" style="--d:.1s;margin-top:26px">
+    <div class="chart-head"><h3>Data pipeline · quality-controlled chaos</h3><span class="chip">IAS15 · ε = 10⁻⁹ → 10⁻¹² · T = 100 · Δt = 0.1</span></div>
+    <div class="pipe">
+      <div class="pnode"><div class="pn"><span class="count" data-to="5000">0</span></div><div class="pl">generated</div><div class="pd ok">8 mass configs</div></div>
+      <div class="pnode"><div class="pn"><span class="count" data-to="3464">0</span></div><div class="pl">stable</div><div class="pd">−1,536 escaped</div></div>
+      <div class="pnode"><div class="pn"><span class="count" data-to="3314">0</span></div><div class="pl">clean</div><div class="pd">−150 flagged · 142 re-integrated</div></div>
+      <div class="pnode"><div class="pn"><span class="count" data-to="3112">0</span></div><div class="pl">λ-labeled</div><div class="pd">−202 buffer-zone</div></div>
+      <div class="pnode"><div class="pn"><span class="count" data-to="454">0</span></div><div class="pl">test systems</div><div class="pd ok">2,109 train · 451 val</div></div>
+    </div>
+    <div class="chart-head" style="margin-top:18px"><h3>Chaos ruler · maximal Lyapunov exponent (log scale)</h3><span class="chip">5 perturbation directions · Benettin renormalization · block-bootstrap CIs</span></div>
+    <div class="chart" id="rulerChart"></div>
+    <p class="demo-note">Split by <b>system identity</b>, never by timestep — consecutive states are near-duplicates; sample-level splits would leak. Buffer zones of ±0.5σλ around bin edges keep classification noise out of inter-bin comparisons.</p>
+  </div>
+</section>
+
+<!-- ================= 05 PAPER ================= -->
+<section id="paper">
+  <div class="snum" aria-hidden="true">05</div>
+  <div class="kicker rv">The paper</div>
+  <h2 class="rv" style="--d:.06s">Read it. Cite it. <span style="color:var(--green)">Reproduce it.</span></h2>
+  <div class="paper-grid">
+    <div class="card rv" style="--d:.12s">
+      <p class="abstract"><span class="drop">A</span>bstract — Hamiltonian Neural Networks impose energy conservation as a structural prior, yet the literature has not identified which component of this prior drives their advantage, nor whether that advantage scales with chaos intensity. This study addresses both questions in the gravitational three-body problem by training four architecturally matched models spanning a spectrum of physics structure: a standard MLP, a MechanicsNN that knows only that the system is second-order, an MLP with energy regularization (MLP+E), and a full HNN — all sharing an identical ResBlock backbone with ~530K parameters. Evaluation on <strong>454 held-out systems</strong>, stratified by maximal Lyapunov exponent, reveals a result that contradicts the standard narrative: <strong>trajectory divergence time is statistically identical across all four models</strong>, in every chaos bin, under both Euler and RK4 integration. The HNN advantage manifests entirely in orbit geometry — Hausdorff distance reductions of <strong>39%, 66%, and 68%</strong> (p&nbsp;&lt;&nbsp;10⁻⁶). Decomposition shows second-order structure accounts for roughly half the geometric improvement in low chaos but only a quarter in high chaos: <strong>the Hamiltonian constraint specifically is what scales with chaos</strong> (Spearman ρ&nbsp;=&nbsp;0.246). Soft energy regularization provides no benefit beyond second-order structure, while the structural constraint cannot be optimized away. HNN errors manifest as phase shifts along the correct orbit; standard network errors disrupt the orbit shape entirely. The mechanism of HNN advantage is <strong>geometric, not temporal</strong> — and it strengthens precisely where standard methods fail most catastrophically.</p>
+      <div class="limits">
+        <span class="chip">honest limits:</span><span class="chip">single seed (42)</span><span class="chip">2D planar</span><span class="chip">20 t.u. rollouts</span><span class="chip">no symplectic integrator yet</span><span class="chip">one physical system</span>
+      </div>
+    </div>
+    <div>
+      <div class="findings">
+        <div class="finding rv" style="--d:.16s"><span class="fn">①</span><p><b>Null on timing.</b> Divergence time identical across models, bins, integrators.</p></div>
+        <div class="finding rv" style="--d:.22s"><span class="fn">②</span><p><b>Win on geometry.</b> 39→68% Hausdorff reduction, growing with chaos.</p></div>
+        <div class="finding rv" style="--d:.28s"><span class="fn">③</span><p><b>Hamiltonian-specific scaling.</b> ρ=0.246 vs MechanicsNN — contradicts Gruver et al. in chaotic regimes.</p></div>
+        <div class="finding rv" style="--d:.34s"><span class="fn">④</span><p><b>Hard &gt; soft.</b> Loss penalties are traded away; architecture is non-negotiable.</p></div>
+      </div>
+      <div class="card rv" style="--d:.4s;margin-top:14px">
+        <div class="chart-head"><h3>BibTeX</h3><button class="copy-btn" id="copyBib">Copy ⧉</button></div>
+        <pre class="code" id="bibPre" style="max-height:220px"></pre>
+        <div class="hero-ctas" style="margin-top:12px">
+          <a class="btn solid" href="three_body_hnn_paper.pdf" target="_blank" rel="noopener">⤓ Download PDF</a>
+          <a class="btn" href="https://github.com/mehtaarnav/hnn-threebody-mechanism" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="fl"><b>Decomposing the Hamiltonian Neural Network Advantage in the Chaotic Three-Body Problem</b><br>Arnav Mehta · Machine Learning in Physics · May 2026 · companion page to the paper</div>
+  <div class="fr"><a href="three_body_hnn_paper.pdf" target="_blank" rel="noopener">PDF ↗</a><a href="https://github.com/mehtaarnav/hnn-threebody-mechanism" target="_blank" rel="noopener">GitHub ↗</a><a href="#lab">Back to the lab ↑</a></div>
+</footer>
+
+<div id="tooltip" role="tooltip"></div>
+<div id="toasts" aria-live="polite"></div>
+<noscript><div style="position:fixed;inset:auto 0 0 0;z-index:99;background:#121631;padding:14px;text-align:center;font-family:monospace">Enable JavaScript for the live mechanism lab — the paper PDF remains available above.</div></noscript>
+
+<script>
+"use strict";
+/* ============================== utilities ============================== */
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const MC={mlp:"#ff4d6d",mech:"#ffb020",e:"#b48bff",hnn:"#22d3ee"};
+const ML={mlp:"MLP",mech:"MechanicsNN",e:"MLP+E",hnn:"HNN"};
+function toast(msg,kind){const t=document.createElement("div");t.className="toast"+(kind?" "+kind:"");t.textContent=msg;$("toasts").appendChild(t);setTimeout(()=>{t.classList.add("out");setTimeout(()=>t.remove(),350)},2800);}
+function copyText(txt,msg){const done=()=>toast(msg||"Copied ✓","ok");
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>fallback());}else fallback();
+  function fallback(){const ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done();}catch(e){toast("Copy failed — select manually","warn");}ta.remove();}}
+let gSpare=null;
+function gauss(){if(gSpare!==null){const v=gSpare;gSpare=null;return v;}let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();const r=Math.sqrt(-2*Math.log(u)),a=2*Math.PI*v;gSpare=r*Math.sin(a);return r*Math.cos(a);}
+
+/* ============================== starfield ============================== */
+const starC=$("stars"),starX=starC.getContext("2d");
+let stars=[],SW=0,SH=0;
+function starResize(){const d=Math.min(2,devicePixelRatio||1);SW=innerWidth;SH=innerHeight;starC.width=SW*d;starC.height=SH*d;starX.setTransform(d,0,0,d,0,0);
+  stars=[];const n=Math.min(170,Math.floor(SW*SH/9000));
+  for(let i=0;i<n;i++)stars.push({x:Math.random()*SW,y:Math.random()*SH,r:Math.random()*1.3+.3,tw:Math.random()*Math.PI*2,sp:.02+Math.random()*.06,layer:Math.random()<.4?2:1,
+    c:Math.random()<.12?"#8df4ff":(Math.random()<.1?"#ffb3c1":"#c9cdfa")});}
+starResize();addEventListener("resize",starResize);
+let scrollY=0;
+function drawStars(t){starX.clearRect(0,0,SW,SH);for(const s of stars){const a=(RM?.6:(.35+.45*Math.sin(s.tw+t*.001*s.sp*60)))*(s.layer===2?.9:.5);
+  const y=(s.y - scrollY*(s.layer===2?.12:.05))%SH;const yy=y<0?y+SH:y;
+  starX.globalAlpha=a;starX.fillStyle=s.c;starX.beginPath();starX.arc(s.x,yy,s.r,0,6.2832);starX.fill();}starX.globalAlpha=1;}
+
+/* ============================== physics core ============================== */
+const DT=0.005,TAU=0.6,MAXTR=1600,TRSTRIDE=3,TRDT=DT*TRSTRIDE;
+let EPS=0.0001,G=1;
+const masses=new Float64Array(3);
+function accel(s,out){out[0]=out[1]=out[2]=out[3]=out[4]=out[5]=0;
+  for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){const dx=s[2*j]-s[2*i],dy=s[2*j+1]-s[2*i+1];
+    const r2=dx*dx+dy*dy+EPS*EPS,inv=G/(r2*Math.sqrt(r2));
+    out[2*i]+=masses[j]*dx*inv;out[2*i+1]+=masses[j]*dy*inv;
+    out[2*j]-=masses[i]*dx*inv;out[2*j+1]-=masses[i]*dy*inv;}}
+function derivBase(s,out){for(let i=0;i<6;i++)out[i]=s[6+i];accel(s,out.subarray(6));}
+function energy(s){let ke=0,pe=0;for(let i=0;i<3;i++)ke+=.5*masses[i]*(s[6+2*i]*s[6+2*i]+s[7+2*i]*s[7+2*i]);
+  for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){const dx=s[2*j]-s[2*i],dy=s[2*j+1]-s[2*i+1];pe-=G*masses[i]*masses[j]/Math.sqrt(dx*dx+dy*dy+EPS*EPS);}return ke+pe;}
+const gH=new Float64Array(12);
+function gradH(s,g){for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){const dx=s[2*i]-s[2*j],dy=s[2*i+1]-s[2*j+1];
+    const r2=dx*dx+dy*dy+EPS*EPS,inv=G*masses[i]*masses[j]/(r2*Math.sqrt(r2));
+    g[2*i]+=inv*dx;g[2*i+1]+=inv*dy;g[2*j]-=inv*dx;g[2*j+1]-=inv*dy;}
+  for(let i=0;i<3;i++){g[6+2*i]=masses[i]*s[6+2*i];g[7+2*i]=masses[i]*s[7+2*i];}}
+function gradHfresh(s,g){g[0]=g[1]=g[2]=g[3]=g[4]=g[5]=0;gradH(s,g);}
+const K1=new Float64Array(12),K2=new Float64Array(12),K3=new Float64Array(12),K4=new Float64Array(12),ST=new Float64Array(12);
+function rk4(s,h,f){f(s,K1);for(let i=0;i<12;i++)ST[i]=s[i]+h*.5*K1[i];f(ST,K2);
+  for(let i=0;i<12;i++)ST[i]=s[i]+h*.5*K2[i];f(ST,K3);for(let i=0;i<12;i++)ST[i]=s[i]+h*K3[i];f(ST,K4);
+  for(let i=0;i<12;i++)s[i]+=h/6*(K1[i]+2*K2[i]+2*K3[i]+K4[i]);}
+function euler(s,h,f){f(s,K1);for(let i=0;i<12;i++)s[i]+=h*K1[i];}
+
+function makeTrail(){return{buf:new Float32Array(MAXTR*6),head:0,count:0};}
+function trailPush(tr,s){const o=tr.head*6;for(let k=0;k<6;k++)tr.buf[o+k]=s[k];tr.head=(tr.head+1)%MAXTR;tr.count=Math.min(tr.count+1,MAXTR);}
+function trailClear(tr){tr.head=0;tr.count=0;}
+function trailIdx(tr,L,j){return((tr.head-L+j)%MAXTR+MAXTR)%MAXTR;}
+
+const trueSys={s:new Float64Array(12),trail:makeTrail()};
+const predSys={s:new Float64Array(12),trail:makeTrail(),n:new Float64Array(12),np:new Float64Array(12),H0:0};
+let model="mlp",integrator="rk4",sigma=.08,speed=1,horizon=20,trailLen=600,glow=.55,zoom=1;
+let showGhost=true,showLinks=true,showGrid=false,paused=false;
+let simT=0,launchT=0,rollout=1,flash=0,stepCounter=0,acc=0;
+
+const trueField=(s,out)=>derivBase(s,out);
+const predField=(s,out)=>{derivBase(s,out);const n=predSys.n;
+  if(model==="mlp"||model==="e"){for(let i=0;i<12;i++)out[i]+=n[i];}
+  else if(model==="mech"){for(let i=6;i<12;i++)out[i]+=n[i];}
+  else{const np=predSys.np;for(let i=0;i<12;i++)out[i]+=np[i];}};
+
+function ouUpdate(){const n=predSys.n,amp=sigma*Math.sqrt(2*DT/TAU),dec=1-DT/TAU;
+  for(let i=0;i<12;i++)n[i]=n[i]*dec+amp*gauss();
+  if(model==="hnn"){gradHfresh(predSys.s,gH);let dot=0,gg=0;
+    for(let i=0;i<12;i++){dot+=n[i]*gH[i];gg+=gH[i]*gH[i];}gg+=1e-9;const c=dot/gg;
+    for(let i=0;i<12;i++)predSys.np[i]=n[i]-c*gH[i];}}
+function anchor(kappa){gradHfresh(predSys.s,gH);let gg=0;for(let i=0;i<12;i++)gg+=gH[i]*gH[i];gg+=1e-9;
+  const err=energy(predSys.s)-predSys.H0,c=kappa*err/gg;
+  for(let i=0;i<12;i++)predSys.s[i]-=c*gH[i];}
+function stepPhysics(){
+  (integrator==="rk4"?rk4:euler)(trueSys.s,DT,trueField);
+  ouUpdate();
+  (integrator==="rk4"?rk4:euler)(predSys.s,DT,predField);
+  if(model==="hnn")anchor(3*DT);else if(model==="e")anchor(0.3*DT);
+  simT+=DT;stepCounter++;
+  if(stepCounter%TRSTRIDE===0){trailPush(trueSys.trail,trueSys.s);trailPush(predSys.trail,predSys.s);}
+  if(simT-launchT>=horizon)relaunchPred(false);
+  if(stepCounter%40===0)checkEscape();
+}
+let lastEscapeToast=0;
+function checkEscape(){for(let i=0;i<3;i++){const x=trueSys.s[2*i],y=trueSys.s[2*i+1];
+  if(x*x+y*y>81){loadPreset($("preset").value,true);const now=performance.now();
+    if(now-lastEscapeToast>5000){toast("Escape detected — system resampled (the paper filtered 30.7% of runs)","warn");lastEscapeToast=now;}return;}}}
+function relaunchPred(silent){predSys.s.set(trueSys.s);predSys.n.fill(0);predSys.np.fill(0);
+  predSys.H0=energy(trueSys.s);trailClear(predSys.trail);launchT=simT;flash=1;
+  if(!silent)rollout++;else rollout=1;}
+
+/* -------- presets -------- */
+const MASSCFG=[[1,1,1],[1,1,.1],[1,.5,.5],[2,1,.5],[1,1,2],[3,1,.3],[1,1,.5],[1.5,1,1]];
+function zeroCOM(s){let M=0,cx=0,cy=0,px=0,py=0;for(let i=0;i<3;i++){M+=masses[i];cx+=masses[i]*s[2*i];cy+=masses[i]*s[2*i+1];px+=masses[i]*s[6+2*i];py+=masses[i]*s[7+2*i];}
+  for(let i=0;i<3;i++){s[2*i]-=cx/M;s[2*i+1]-=cy/M;s[6+2*i]-=px/M;s[7+2*i]-=py/M;}}
+function setMasses(a){masses[0]=a[0];masses[1]=a[1];masses[2]=a[2];}
+function baseIC(name){const s=new Float64Array(12);
+  if(name==="figure8"){setMasses([1,1,1]);EPS=0.0001;
+    s.set([0.97000436,-0.24308753,-0.97000436,0.24308753,0,0,0.466203685,0.43236573,0.466203685,0.43236573,-0.93240737,-0.86473146]);}
+  else if(name==="butterfly"){setMasses([1,1,1]);EPS=0.0001;
+    s.set([-1,0,1,0,0,0,0.30689,0.12551,0.30689,0.12551,-0.61378,-0.25102]);}
+  else if(name==="chaotic"){setMasses([1,1,1]);EPS=0.03;
+    s.set([-0.9,0.2,0.8,0.5,0.1,-0.7,0.15,0.1,-0.2,0.05,0.05,-0.15]);}
+  else if(name==="hier"){setMasses([3,1,.3]);EPS=0.05;
+    s.set([0,0,1.1,0,-2.2,0.3,0,0,0,1.65,-0.15,-1.16]);}
+  else{const mc=MASSCFG[Math.floor(Math.random()*MASSCFG.length)];setMasses(mc);EPS=0.04;
+    const M=mc[0]+mc[1]+mc[2];
+    for(let i=0;i<3;i++){const a=Math.random()*6.2832,r=.55+Math.random()*.85;
+      s[2*i]=r*Math.cos(a);s[2*i+1]=r*Math.sin(a);
+      const vc=Math.sqrt(G*M/r)*(.35+Math.random()*.4),ta=a+Math.PI/2+(Math.random()-.5)*.9;
+      s[6+2*i]=vc*Math.cos(ta);s[7+2*i]=vc*Math.sin(ta);}}
+  zeroCOM(s);return s;}
+function loadPreset(name,jitter){const s=baseIC(name);
+  if(jitter)for(let i=0;i<12;i++)s[i]*=1+(Math.random()-.5)*.16;
+  zeroCOM(s);trueSys.s.set(s);trailClear(trueSys.trail);simT=0;stepCounter=0;acc=0;relaunchPred(true);}
+
+/* ============================== rendering ============================== */
+const simC=$("sim"),ctx=simC.getContext("2d");
+let CW=0,CH=0,DPR=1,vign=null;
+const sprites={};
+function makeSprite(color){const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");
+  const g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,color);g.addColorStop(.25,color+"cc");g.addColorStop(1,color+"00");
+  x.fillStyle=g;x.fillRect(0,0,64,64);return c;}
+for(const k in MC)sprites[k]=makeSprite(MC[k]);
+const whiteSprite=makeSprite("#e8ecff");
+function simResize(){const r=simC.parentElement.getBoundingClientRect();DPR=Math.min(2,devicePixelRatio||1);
+  CW=Math.max(50,r.width);CH=Math.max(50,r.height);simC.width=CW*DPR;simC.height=CH*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+  vign=ctx.createRadialGradient(CW/2,CH/2,Math.min(CW,CH)*.25,CW/2,CH/2,Math.max(CW,CH)*.75);
+  vign.addColorStop(0,"rgba(91,91,214,0.05)");vign.addColorStop(1,"rgba(2,3,8,0.55)");}
+new ResizeObserver(simResize).observe(simC.parentElement);
+simResize();
+const W2X=x=>CW/2+x*(Math.min(CW,CH)/6.8)*zoom;
+const W2Y=y=>CH/2+y*(Math.min(CW,CH)/6.8)*zoom;
+function drawTrail(tr,L,color,glowAmt,baseA,width){if(tr.count<2)return;L=Math.min(L,tr.count);
+  const chunks=16,per=Math.max(2,Math.ceil(L/chunks));
+  for(let pass=0;pass<2;pass++){
+    ctx.globalCompositeOperation=pass===0?"lighter":"source-over";
+    for(let c=0;c<chunks;c++){const j0=c*per,j1=Math.min(L-1,(c+1)*per);if(j0>=j1)break;
+      const f=(c+1)/chunks;
+      ctx.strokeStyle=color;
+      ctx.globalAlpha=pass===0?(.03+.11*glowAmt)*f*baseA:(.10+.55*f)*baseA;
+      ctx.lineWidth=pass===0?width+3+9*glowAmt:width;
+      ctx.lineJoin="round";ctx.lineCap="round";
+      ctx.beginPath();
+      for(let j=j0;j<=j1;j++){const idx=trailIdx(tr,L,j),o=idx*6;
+        const x=W2X(tr.buf[o]),y=W2Y(tr.buf[o+1]);
+        j===j0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+      ctx.stroke();}}
+  ctx.globalCompositeOperation="source-over";ctx.globalAlpha=1;}
+function render(){
+  ctx.fillStyle="#05060f";ctx.fillRect(0,0,CW,CH);
+  if(vign){ctx.fillStyle=vign;ctx.fillRect(0,0,CW,CH);}
+  if(showGrid){ctx.strokeStyle="rgba(140,150,255,0.09)";ctx.lineWidth=1;
+    for(let r=1;r<=3;r++){ctx.beginPath();ctx.arc(CW/2,CH/2,r*(Math.min(CW,CH)/6.8)*zoom,0,6.2832);ctx.stroke();}
+    ctx.beginPath();ctx.moveTo(0,CH/2);ctx.lineTo(CW,CH/2);ctx.moveTo(CW/2,0);ctx.lineTo(CW/2,CH);ctx.stroke();
+    ctx.fillStyle="rgba(140,150,255,0.35)";ctx.font="10px 'IBM Plex Mono',monospace";
+    ctx.fillText("r=1",W2X(1)+4,CH/2-5);ctx.fillText("r=2",W2X(2)+4,CH/2-5);ctx.fillText("r=3",W2X(3)+4,CH/2-5);}
+  if(showGhost)drawTrail(trueSys.trail,trailLen,"#b9c2ff",glow*.3,.8,1.4);
+  drawTrail(predSys.trail,trailLen,MC[model],glow,1,1.8);
+  if(showLinks){ctx.setLineDash([4,4]);ctx.strokeStyle="rgba(236,234,251,0.30)";ctx.lineWidth=1;
+    for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(W2X(trueSys.s[2*i]),W2Y(trueSys.s[2*i+1]));
+      ctx.lineTo(W2X(predSys.s[2*i]),W2Y(predSys.s[2*i+1]));ctx.stroke();}ctx.setLineDash([]);}
+  for(let i=0;i<3;i++){
+    const tx=W2X(trueSys.s[2*i]),ty=W2Y(trueSys.s[2*i+1]);
+    ctx.drawImage(whiteSprite,tx-11,ty-11,22,22);
+    ctx.fillStyle="#f2f4ff";ctx.beginPath();ctx.arc(tx,ty,2.4,0,6.2832);ctx.fill();
+    ctx.strokeStyle="rgba(236,234,251,0.5)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(tx,ty,5.5,0,6.2832);ctx.stroke();
+    const px=W2X(predSys.s[2*i]),py=W2Y(predSys.s[2*i+1]);
+    const gs=20+22*glow;ctx.drawImage(sprites[model],px-gs/2,py-gs/2,gs,gs);
+    ctx.fillStyle=MC[model];ctx.beginPath();ctx.arc(px,py,3.2,0,6.2832);ctx.fill();
+    if(flash>0){ctx.strokeStyle=MC[model];ctx.globalAlpha=flash*.7;ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(tx,ty,8+(1-flash)*26,0,6.2832);ctx.stroke();ctx.globalAlpha=1;}}
+  if(flash>0)flash=Math.max(0,flash-.03);
+}
+
+/* -------- live metrics -------- */
+const sampA=new Float32Array(96),sampB=new Float32Array(96);
+function sampleTrail(tr,out){const W=Math.min(tr.count,300);if(W<4)return 0;
+  const S=32,stride=Math.max(1,Math.floor(W/S));let n=0;
+  for(let j=W-1;j>=0&&n<S;j-=stride){const idx=trailIdx(tr,W,j),o=idx*6;
+    out[2*n]=tr.buf[o];out[2*n+1]=tr.buf[o+1];n++;}
+  return n;}
+function hausdorffBody(ax,ay,bx,by,nA,nB){let mAB=0,mBA=0;
+  for(let i=0;i<nA;i++){let mn=1e18;for(let j=0;j<nB;j++){const dx=ax[i]-bx[j],dy=ay[i]-by[j],d=dx*dx+dy*dy;if(d<mn)mn=d;}if(mn>mAB)mAB=mn;}
+  for(let j=0;j<nB;j++){let mn=1e18;for(let i=0;i<nA;i++){const dx=ax[i]-bx[j],dy=ay[i]-by[j],d=dx*dx+dy*dy;if(d<mn)mn=d;}if(mn>mBA)mBA=mn;}
+  return Math.sqrt(Math.max(mAB,mBA));}
+const bA=new Float32Array(64),bB=new Float32Array(64);
+function computeMetrics(){
+  const drift=Math.abs((energy(predSys.s)-predSys.H0)/(Math.abs(predSys.H0)+1e-9));
+  let dTxt=drift>10?">1000%":(drift*100).toFixed(2)+"%";
+  $("mEnergyV").textContent=dTxt;
+  const eCol=drift>.05?"var(--red)":drift>.01?"var(--amber)":"var(--green)";
+  $("mEnergyV").style.color=eCol;
+  $("mEnergyB").style.width=clamp(Math.log10(1+drift*100)/3*100,0,100)+"%";
+  $("mEnergyB").style.background=eCol;
+  const W=Math.min(trueSys.trail.count,300);
+  if(predSys.trail.count>10&&W>10){
+    let hSum=0,pSum=0;
+    for(let b=0;b<3;b++){
+      const nT=(function(){let n=0;const stride=Math.max(1,Math.floor(W/32));
+        for(let j=W-1;j>=0&&n<32;j-=stride){const idx=trailIdx(trueSys.trail,W,j),o=idx*6;bA[2*n]=trueSys.trail.buf[o+2*b];bA[2*n+1]=trueSys.trail.buf[o+2*b+1];n++;}return n;})();
+      const WP=Math.min(predSys.trail.count,300);
+      const nP=(function(){let n=0;const stride=Math.max(1,Math.floor(WP/32));
+        for(let j=WP-1;j>=0&&n<32;j-=stride){const idx=trailIdx(predSys.trail,WP,j),o=idx*6;bB[2*n]=predSys.trail.buf[o+2*b];bB[2*n+1]=predSys.trail.buf[o+2*b+1];n++;}return n;})();
+      hSum+=hausdorffBody(bA.subarray(0,2*nT),bA.subarray(0,2*nT).map?bA:bA,bB,bB,nT,nP); /* placeholder fixed below */
+    }
+    /* recompute cleanly per body (x/y interleaved helpers) */
+    hSum=0;pSum=0;
+    for(let b=0;b<3;b++){
+      const nT=collect(trueSys.trail,W,b,bA),nP=collect(predSys.trail,Math.min(predSys.trail.count,300),b,bB);
+      hSum+=hdInterleaved(bA,nT,bB,nP);
+      const px=predSys.s[2*b],py=predSys.s[2*b+1];let best=1e18,bi=0;
+      for(let i=0;i<nT;i++){const dx=bA[2*i]-px,dy=bA[2*i+1]-py,d=dx*dx+dy*dy;if(d<best){best=d;bi=i;}}
+      pSum+=bi*Math.max(1,Math.floor(W/32))*TRDT;
+    }
+    const h=hSum/3,p=pSum/3;
+    $("mHausV").textContent=h.toFixed(2);$("mHausV").style.color=MC[model];
+    $("mHausB").style.width=clamp(h/8*100,0,100)+"%";$("mHausB").style.background=MC[model];
+    $("mPhaseV").textContent="~"+p.toFixed(2)+" t.u.";$("mPhaseV").style.color="var(--violet)";
+    $("mPhaseB").style.width=clamp(p/6*100,0,100)+"%";
+  } else { $("mHausV").textContent="0.00";$("mPhaseV").textContent="—";$("mHausB").style.width="0%";$("mPhaseB").style.width="0%"; }
+  $("hudRollout").textContent="rollout #"+rollout;
+  $("hudTime").textContent="t "+(simT-launchT).toFixed(1)+" / "+horizon;
+}
+function collect(tr,W,b,out){let n=0;const stride=Math.max(1,Math.floor(W/32));
+  for(let j=W-1;j>=0&&n<32;j-=stride){const idx=trailIdx(tr,W,j),o=idx*6;out[2*n]=tr.buf[o+2*b];out[2*n+1]=tr.buf[o+2*b+1];n++;}return n;}
+function hdInterleaved(A,nA,B,nB){let mAB=0,mBA=0;
+  for(let i=0;i<nA;i++){let mn=1e18;for(let j=0;j<nB;j++){const dx=A[2*i]-B[2*j],dy=A[2*i+1]-B[2*j+1],d=dx*dx+dy*dy;if(d<mn)mn=d;}if(mn>mAB)mAB=mn;}
+  for(let j=0;j<nB;j++){let mn=1e18;for(let i=0;i<nA;i++){const dx=A[2*i]-B[2*j],dy=A[2*i+1]-B[2*j+1],d=dx*dx+dy*dy;if(d<mn)mn=d;}if(mn>mBA)mBA=mn;}
+  return Math.sqrt(Math.max(mAB,mBA));}
+
+/* ============================== main loop ============================== */
+let last=performance.now(),lastM=0;
+function loop(now){
+  const dtR=Math.min(.05,(now-last)/1000);last=now;
+  if(!paused){acc+=dtR*1.5*speed;let steps=Math.floor(acc/DT);acc-=steps*DT;steps=Math.min(steps,60);
+    for(let i=0;i<steps;i++)stepPhysics();}
+  render();drawStars(now);
+  if(now-lastM>140){computeMetrics();lastM=now;}
+  requestAnimationFrame(loop);
+}
+
+/* ============================== controls wiring ============================== */
+function setModel(m,quiet){model=m;
+  document.querySelectorAll(".mbtn").forEach(b=>{b.setAttribute("aria-pressed",b.dataset.m===m?"true":"false");b.classList.remove("pulse");});
+  $("hudModel").textContent="● "+ML[m];$("hudModel").style.color=MC[m];
+  relaunchPred(false);
+  if(!quiet)toast(ML[m]+" loaded — relaunched from the identical state. Same σ, different structure.");}
+document.querySelectorAll(".mbtn").forEach(b=>b.addEventListener("click",()=>setModel(b.dataset.m)));
+document.querySelectorAll(".load-btn").forEach(b=>b.addEventListener("click",()=>{setModel(b.dataset.m,true);
+  document.getElementById("lab").scrollIntoView({behavior:RM?"auto":"smooth"});toast(ML[b.dataset.m]+" loaded in the lab ↑","ok");}));
+$("preset").addEventListener("change",e=>{loadPreset(e.target.value,false);toast("System loaded: "+e.target.selectedOptions[0].textContent);});
+$("integrator").addEventListener("change",e=>{integrator=e.target.value;toast("Integrator → "+(integrator==="rk4"?"RK4 (4th order)":"Euler (1st order) — watch integrator drift appear"));});
+function bindSlider(id,out,fmt,fn){const el=$(id);el.addEventListener("input",()=>{const v=parseFloat(el.value);$(out).textContent=fmt(v);fn(v);});}
+bindSlider("sigma","sigmaVal",v=>v.toFixed(3),v=>sigma=v);
+bindSlider("speed","speedVal",v=>v.toFixed(2)+"×",v=>speed=v);
+bindSlider("horizon","horizonVal",v=>v+" t.u.",v=>horizon=v);
+bindSlider("trail","trailVal",v=>""+v,v=>trailLen=v);
+bindSlider("glow","glowVal",v=>""+v,v=>glow=v/100);
+bindSlider("zoom","zoomVal",v=>v.toFixed(2)+"×",v=>zoom=v);
+$("ghost").addEventListener("change",e=>showGhost=e.target.checked);
+$("links").addEventListener("change",e=>showLinks=e.target.checked);
+$("grid").addEventListener("change",e=>showGrid=e.target.checked);
+$("pauseBtn").addEventListener("click",()=>{paused=!paused;$("pauseBtn").textContent=paused?"▶ Play":"⏸ Pause";$("pauseBtn").classList.toggle("go",!paused);});
+$("resetBtn").addEventListener("click",()=>{loadPreset($("preset").value,false);toast("Reset — true system back to t=0, rollout #1","ok");});
+$("randBtn").addEventListener("click",()=>{$("preset").value="random";loadPreset("random",false);toast("New initial conditions sampled from the paper's 8 mass configs ⚄","ok");});
+$("exportBtn").addEventListener("click",()=>{
+  const oc=document.createElement("canvas");oc.width=simC.width;oc.height=simC.height+44*DPR;
+  const ox=oc.getContext("2d");ox.drawImage(simC,0,0);
+  ox.fillStyle="#0a0d1f";ox.fillRect(0,simC.height,oc.width,44*DPR);
+  ox.fillStyle="#8df4ff";ox.font=(12*DPR)+"px 'IBM Plex Mono',monospace";
+  ox.fillText("hnn-threebody-mechanism · "+ML[model]+" · σ="+sigma.toFixed(3)+" · "+integrator.toUpperCase()+" · rollout #"+rollout+" · t="+simT.toFixed(1),14*DPR,simC.height+27*DPR);
+  oc.toBlob(b=>{if(!b){toast("Export failed","warn");return;}
+    const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="hnn-mechanism-"+model+".png";a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Frame exported with caption ⤓","ok");});});
+
+/* ============================== charts ============================== */
+const MODELS=[{k:"mlp",short:"MLP"},{k:"mech",short:"MEC"},{k:"e",short:"+E"},{k:"hnn",short:"HNN"}];
+const DIV={L:[[19,16,21],[20,16,22],[20,16,21],[17,15,19]],M:[[18,16,19],[18,17,21],[18,16,20],[17,16,18]],H:[[10,8,11],[10,8.5,11],[10,8,10.5],[10,9,11]]};
+const HAUS={L:[[8.46,7.79,8.99],[6.55,6.08,6.85],[6.41,6.02,6.73],[5.21,4.75,5.77]],M:[[7.36,6.50,7.90],[5.54,5.25,5.82],[5.54,5.25,5.95],[2.53,2.35,2.80]],H:[[6.91,6.47,7.26],[5.54,5.29,5.94],[5.64,5.42,5.94],[2.21,2.02,2.48]]};
+const BINS=[["L","LOW λ"],["M","MED λ"],["H","HIGH λ"]];
+function legendInto(id){$(id).innerHTML=MODELS.map(m=>'<span><span class="dot" style="background:'+MC[m.k]+'"></span>'+ML[m.k]+"</span>").join("");}
+legendInto("legend1");legendInto("legend2");
+function groupChart(elId,data,yMax,unit,pct){
+  const W=720,Hh=330,l=48,r=14,t=22,b=54,pw=W-l-r,ph=Hh-t-b;
+  const y=v=>t+ph*(1-v/yMax);
+  let s='<svg viewBox="0 0 '+W+" "+Hh+'" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">';
+  for(let i=0;i<=4;i++){const v=yMax*i/4,yy=y(v);
+    s+='<line x1="'+l+'" y1="'+yy+'" x2="'+(W-r)+'" y2="'+yy+'" stroke="rgba(140,150,255,0.12)" stroke-width="1"/>';
+    s+='<text x="'+(l-8)+'" y="'+(yy+4)+'" fill="#6c6f96" font-size="10" text-anchor="end">'+(v%1?v.toFixed(1):v)+"</text>";}
+  const gw=pw/3,bw=30,gap=10,off=(gw-(4*bw+3*gap))/2;
+  BINS.forEach((bin,gi)=>{
+    data[bin[0]].forEach((d,mi)=>{
+      const m=MODELS[mi],x=l+gi*gw+off+mi*(bw+gap),cx=x+bw/2;
+      const tip=ML[m.k]+" · "+bin[1]+"&#10;median "+d[0]+" "+unit+"&#10;95% CI ["+d[1]+", "+d[2]+"]";
+      s+='<rect class="bar" style="transition-delay:'+(gi*.12+mi*.06)+'s" x="'+x+'" y="'+y(d[0])+'" width="'+bw+'" height="'+(ph*d[0]/yMax)+'" rx="3" fill="'+MC[m.k]+'" fill-opacity="0.88" data-tip="'+tip+'"/>';
+      s+='<g class="ci"><line x1="'+cx+'" y1="'+y(d[2])+'" x2="'+cx+'" y2="'+y(d[1])+'" stroke="rgba(236,234,251,0.65)" stroke-width="1.4"/>';
+      s+='<line x1="'+(cx-6)+'" y1="'+y(d[2])+'" x2="'+(cx+6)+'" y2="'+y(d[2])+'" stroke="rgba(236,234,251,0.65)" stroke-width="1.4"/>';
+      s+='<line x1="'+(cx-6)+'" y1="'+y(d[1])+'" x2="'+(cx+6)+'" y2="'+y(d[1])+'" stroke="rgba(236,234,251,0.65)" stroke-width="1.4"/></g>';
+      s+='<text x="'+cx+'" y="'+(t+ph+15)+'" fill="#a3a6cc" font-size="8.5" text-anchor="middle">'+m.short+"</text>";
+      if(pct&&mi===3)s+='<text x="'+cx+'" y="'+(y(d[2])-9)+'" fill="#22d3ee" font-size="12" font-weight="600" text-anchor="middle">−'+pct[gi]+"%</text>";
+    });
+    s+='<text x="'+(l+gi*gw+gw/2)+'" y="'+(t+ph+36)+'" fill="#eceafb" font-size="11" text-anchor="middle" letter-spacing="2">'+bin[1]+"</text>";
+  });
+  s+='<text x="'+l+'" y="'+(t-8)+'" fill="#6c6f96" font-size="9.5">'+unit+"</text></svg>";
+  $(elId).innerHTML=s;
+}
+groupChart("divChart",DIV,24,"steps",null);
+groupChart("hausChart",HAUS,9.5,"Hausdorff units",[39,66,68]);
+(function decomp(){
+  const rows=[["LOW λ",1.91,1.34,59,41],["MED λ",1.82,3.01,38,62],["HIGH λ",1.37,3.33,29,71]];
+  const W=720,Hh=234,bx=104,maxW=500,sc=maxW/4.83;
+  let s='<svg viewBox="0 0 '+W+" "+Hh+'" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">';
+  rows.forEach((r,i)=>{const yy=26+i*70,w1=r[1]*sc,w2=r[2]*sc;
+    s+='<text x="0" y="'+(yy+22)+'" fill="#eceafb" font-size="11" letter-spacing="2">'+r[0]+"</text>";
+    s+='<rect class="hbar" style="transition-delay:'+(i*.15)+'s" x="'+bx+'" y="'+yy+'" width="'+w1+'" height="34" rx="4" fill="#ffb020" fill-opacity="0.9" data-tip="Second-order part (MLP → MechanicsNN)&#10;'+r[1].toFixed(2)+' units · '+r[3]+'% of total"/>';
+    s+='<rect class="hbar" style="transition-delay:'+(i*.15+.1)+'s" x="'+(bx+w1+2)+'" y="'+yy+'" width="'+w2+'" height="34" rx="4" fill="#22d3ee" fill-opacity="0.9" data-tip="Hamiltonian part (MechanicsNN → HNN)&#10;'+r[2].toFixed(2)+' units · '+r[4]+'% of total"/>';
+    if(w1>46)s+='<text x="'+(bx+w1/2)+'" y="'+(yy+22)+'" fill="#1a1200" font-size="12" font-weight="600" text-anchor="middle">'+r[3]+"%</text>";
+    if(w2>46)s+='<text x="'+(bx+w1+2+w2/2)+'" y="'+(yy+22)+'" fill="#03222a" font-size="12" font-weight="600" text-anchor="middle">'+r[4]+"%</text>";
+    s+='<text x="'+(bx+w1+w2+14)+'" y="'+(yy+22)+'" fill="#a3a6cc" font-size="11">Σ '+(r[1]+r[2]).toFixed(2)+"</text>";});
+  s+='<text x="'+bx+'" y="'+(Hh-14)+'" fill="#6c6f96" font-size="9.5">absolute Hausdorff improvement over MLP · share shifts from second-order to Hamiltonian as chaos grows</text></svg>';
+  $("decompChart").innerHTML=s;
+})();
+(function ruler(){
+  const W=720,Hh=132,x0=40,x1=680,lo=.03,hi=12;
+  const X=v=>x0+(x1-x0)*Math.log(v/lo)/Math.log(hi/lo);
+  const regs=[[.038,.148,"#3ddc97","LOW · 1,053"],[.148,.269,"#ffb020","MED · 990"],[.269,11.30,"#ff4d6d","HIGH · 1,069"]];
+  let s='<svg viewBox="0 0 '+W+" "+Hh+'" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">';
+  regs.forEach(r=>{s+='<rect x="'+X(r[0])+'" y="52" width="'+(X(r[1])-X(r[0]))+'" height="26" rx="5" fill="'+r[2]+'" fill-opacity="0.22" stroke="'+r[2]+'" stroke-opacity="0.55"/>';
+    s+='<text x="'+((X(r[0])+X(r[1]))/2)+'" y="99" fill="'+r[2]+'" font-size="10" text-anchor="middle">'+r[3]+"</text>";});
+  [[.038,"λmin 0.038"],[.148,"0.148"],[.2,"median 0.200"],[.269,"0.269"],[1,"1"],[11.3,"λmax 11.30"]].forEach(tk=>{
+    const x=X(tk[0]);s+='<line x1="'+x+'" y1="46" x2="'+x+'" y2="84" stroke="rgba(236,234,251,0.5)" stroke-width="1"/>';
+    s+='<text x="'+x+'" y="38" fill="#a3a6cc" font-size="9.5" text-anchor="middle">'+tk[1]+"</text>";});
+  s+='<text x="'+x0+'" y="122" fill="#6c6f96" font-size="9.5">quantile bins (33rd / 67th pct) · ±0.5σλ buffer zones excluded 202 ambiguous systems</text></svg>';
+  $("rulerChart").innerHTML=s;
+})();
+document.querySelectorAll(".dl-svg").forEach(b=>b.addEventListener("click",()=>{
+  const svg=$(b.dataset.svg).querySelector("svg");if(!svg)return;
+  const clone=svg.cloneNode(true);clone.querySelectorAll(".bar,.hbar,.ci").forEach(el=>{el.removeAttribute("class");el.removeAttribute("style");});
+  clone.setAttribute("style","background:#0a0d1f");
+  const blob=new Blob([new XMLSerializer().serializeToString(clone)],{type:"image/svg+xml"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=b.dataset.svg+".svg";a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Chart exported as standalone SVG ⤓","ok");}));
+
+/* tooltip */
+const tip=$("tooltip");
+document.addEventListener("pointerover",e=>{const t=e.target.closest("[data-tip]");if(t){tip.textContent=t.getAttribute("data-tip").replace(/&#10;/g,"\n");tip.style.opacity="1";}});
+document.addEventListener("pointermove",e=>{if(tip.style.opacity==="1"){tip.style.left=clamp(e.clientX+16,8,innerWidth-270)+"px";tip.style.top=clamp(e.clientY+14,8,innerHeight-90)+"px";}});
+document.addEventListener("pointerout",e=>{if(e.target.closest&&e.target.closest("[data-tip]"))tip.style.opacity="0";});
+/* SVG data-tip entities: replace on set */
+const tipObs=new MutationObserver(()=>{tip.textContent=tip.textContent.replace(/&#10;/g,"\n");});
+tipObs.observe(tip,{childList:true,characterData:true,subtree:true});
+
+/* ============================== reveal / counters / nav ============================== */
+function animCount(el){if(el.dataset.done)return;el.dataset.done="1";
+  const to=parseFloat(el.dataset.to),dec=parseInt(el.dataset.dec||"0"),suf=el.dataset.suf||"";
+  if(RM){el.textContent=to.toFixed(dec)+suf;return;}
+  const t0=performance.now(),dur=1300;
+  (function st(now){const p=clamp((now-t0)/dur,0,1),e=1-Math.pow(1-p,3);
+    el.textContent=(to*e).toFixed(dec)+suf;if(p<1)requestAnimationFrame(st);})(t0);}
+const rvObs=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add("in");
+  en.target.querySelectorAll(".count").forEach(animCount);rvObs.unobserve(en.target);}}),{threshold:.18});
+document.querySelectorAll(".rv").forEach(el=>rvObs.observe(el));
+const secObs=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){const id=en.target.id;
+  document.querySelectorAll(".nlinks a,#dots a").forEach(a=>a.classList.toggle("act",a.dataset.sec===id));}}),{rootMargin:"-40% 0px -55% 0px"});
+document.querySelectorAll("main section").forEach(s=>secObs.observe(s));
+const navToggle=$("navToggle"),mm=$("mobileMenu");
+navToggle.addEventListener("click",()=>{const open=mm.classList.toggle("open");navToggle.setAttribute("aria-expanded",open);navToggle.textContent=open?"✕":"☰";});
+mm.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>{mm.classList.remove("open");navToggle.textContent="☰";navToggle.setAttribute("aria-expanded","false");}));
+const a1=document.querySelector(".a1"),a2=document.querySelector(".a2"),a3=document.querySelector(".a3");
+addEventListener("scroll",()=>{scrollY=window.scrollY;
+  const h=document.documentElement.scrollHeight-innerHeight;
+  $("progress").style.transform="scaleX("+(h>0?scrollY/h:0)+")";
+  if(!RM){a1.style.transform="translate3d(0,"+scrollY*.05+"px,0)";a2.style.transform="translate3d(0,"+scrollY*-.04+"px,0)";a3.style.transform="translate3d(0,"+scrollY*-.07+"px,0)";}
+},{passive:true});
+
+/* ============================== citation ============================== */
+const BIB=[
+"@misc{mehta2026hnn,",
+"  title  = {Decomposing the Hamiltonian Neural Network Advantage",
+"            in the Chaotic Three-Body Problem},",
+"  author = {Mehta, Arnav},",
+"  year   = {2026},",
+"  month  = may,",
+"  note   = {Machine Learning in Physics, research project},",
+"  url    = {https://github.com/mehtaarnav/hnn-threebody-mechanism}",
+"}"].join("\n");
+$("bibPre").textContent=BIB;
+$("copyBib").addEventListener("click",()=>copyText(BIB,"BibTeX copied ⧉"));
+/* ============================== boot ============================== */
+loadPreset("figure8",false);
+setModel("mlp",true);
+document.querySelector('.mbtn[data-m="hnn"]').classList.add("pulse");
+requestAnimationFrame(t=>{last=t;requestAnimationFrame(loop);});
+</script>
+</body>
+</html>
